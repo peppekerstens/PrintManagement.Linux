@@ -26,7 +26,7 @@ Describe 'PrintManagement.Linux Examples' -Skip:(-not $script:onLinux) {
             Test-Path (Join-Path $script:examplesDir '01-ListPrinters.ps1') | Should -Be $true
         }
 
-        It 'Script runs without error' {
+        It 'Script runs without error' -Skip:(-not $script:cupsAvailable) {
             { & (Join-Path $script:examplesDir '01-ListPrinters.ps1') } | Should -Not -Throw
         }
 
@@ -56,7 +56,7 @@ Describe 'PrintManagement.Linux Examples' -Skip:(-not $script:onLinux) {
             Test-Path (Join-Path $script:examplesDir '02-ManagePrintJobs.ps1') | Should -Be $true
         }
 
-        It 'Script runs without error' {
+        It 'Script runs without error' -Skip:(-not $script:cupsAvailable) {
             { & (Join-Path $script:examplesDir '02-ManagePrintJobs.ps1') } | Should -Not -Throw
         }
 
@@ -132,7 +132,7 @@ Describe 'PrintManagement.Linux Examples' -Skip:(-not $script:onLinux) {
             Test-Path (Join-Path $script:examplesDir '04-PrinterHealthReport.ps1') | Should -Be $true
         }
 
-        It 'Script runs without error' {
+        It 'Script runs without error' -Skip:(-not $script:cupsAvailable) {
             { & (Join-Path $script:examplesDir '04-PrinterHealthReport.ps1') } | Should -Not -Throw
         }
 

@@ -4,8 +4,8 @@
 
 @{
     RootModule        = 'PrintManagement.Linux.psm1'
-    ModuleVersion     = '0.1.0'
-    GUID              = 'f7a8b9c0-d1e2-3456-fghi-789012345678'
+    ModuleVersion     = '0.1.1'
+    GUID              = 'f7a8b9c0-d1e2-3456-abcd-789012345678'
     Author            = 'Peppe Kerstens'
     CompanyName       = ''
     Copyright         = '(c) Peppe Kerstens. GPL-3.0 license.'
@@ -50,6 +50,7 @@
             LicenseUri   = 'https://github.com/peppekerstens/PrintManagement.Linux/blob/main/LICENSE'
             ProjectUri   = 'https://github.com/peppekerstens/PrintManagement.Linux'
             ReleaseNotes = @'
+0.1.1 - Fix invalid GUID (non-hex chars fghi replaced with abcd). Skip CUPS-dependent example tests when CUPS not installed.
 0.1.0 - Initial release. Get-Printer, Get-PrintJob, Add-Printer, Remove-Printer, Remove-PrintJob, Suspend-PrintJob, Resume-PrintJob implemented via CUPS. 15 Windows-specific cmdlets are stubs.
 '@
         }
