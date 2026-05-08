@@ -1,4 +1,6 @@
 #Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '5.2.0' }
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingComputerNameHardcoded', '', Justification = 'Test intentionally passes a remote computer name to verify warning behavior')]
+param()
 
 BeforeDiscovery {
     $script:onLinux = $IsLinux
