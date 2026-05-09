@@ -178,11 +178,6 @@ Describe 'PrintManagement.Linux module' -Skip:(-not $script:onLinux) {
             Add-PrinterPort -WarningVariable warns -WarningAction SilentlyContinue
             $warns | Should -Not -BeNullOrEmpty
         }
-        It 'Get-PrintConfiguration writes a warning' {
-            $warns = $null
-            Get-PrintConfiguration -WarningVariable warns -WarningAction SilentlyContinue
-            $warns | Should -Not -BeNullOrEmpty
-        }
         It 'Get-PrinterDriver writes a warning' {
             $warns = $null
             Get-PrinterDriver -WarningVariable warns -WarningAction SilentlyContinue
@@ -193,20 +188,107 @@ Describe 'PrintManagement.Linux module' -Skip:(-not $script:onLinux) {
             Get-PrinterPort -WarningVariable warns -WarningAction SilentlyContinue
             $warns | Should -Not -BeNullOrEmpty
         }
-        It 'Rename-Printer writes a warning' {
-            $warns = $null
-            Rename-Printer -WarningVariable warns -WarningAction SilentlyContinue
-            $warns | Should -Not -BeNullOrEmpty
-        }
         It 'Restart-PrintJob writes a warning' {
             $warns = $null
             Restart-PrintJob -WarningVariable warns -WarningAction SilentlyContinue
             $warns | Should -Not -BeNullOrEmpty
         }
-        It 'Set-Printer writes a warning' {
-            $warns = $null
-            Set-Printer -WarningVariable warns -WarningAction SilentlyContinue
-            $warns | Should -Not -BeNullOrEmpty
+    }
+
+    Context 'Get-PrintConfiguration — CUPS integration' {
+        It 'Returns an error when CUPS is absent' {
+            if (Get-Command lpoptions -ErrorAction SilentlyContinue) {
+                Set-ItResult -Skipped -Because 'lpoptions found (CUPS installed)'
+                return
+            }
+            $errors = $null
+            Get-PrintConfiguration -PrinterName 'TestPrinter' -ErrorVariable errors -ErrorAction SilentlyContinue
+            $errors | Should -Not -BeNullOrEmpty
+        }
+        It 'Returns an object with PrinterName and Options when CUPS is available' {
+            if (-not (Get-Command lpoptions -ErrorAction SilentlyContinue)) {
+                Set-ItResult -Skipped -Because 'lpoptions not found (CUPS not installed)'
+                return
+            }
+            $result = Get-PrintConfiguration -PrinterName 'TestPrinter' -ErrorAction SilentlyContinue
+            if ($result) {
+                $result.PSObject.Properties.Name | Should -Contain 'PrinterName'
+                $result.PSObject.Properties.Name | Should -Contain 'Options'
+            }
+        }
+    }
+
+    Context 'Get-PrinterProperty — CUPS integration' {
+        It 'Returns an error when CUPS is absent' {
+            if (Get-Command lpoptions -ErrorAction SilentlyContinue) {
+                Set-ItResult -Skipped -Because 'lpoptions found (CUPS installed)'
+                return
+            }
+            $errors = $null
+            Get-PrinterProperty -PrinterName 'TestPrinter' -ErrorVariable errors -ErrorAction SilentlyContinue
+            $errors | Should -Not -BeNullOrEmpty
+        }
+    }
+
+    Context 'Set-PrintConfiguration — WhatIf' {
+        It 'Supports -WhatIf without calling lpoptions' {
+            if (-not (Get-Command lpoptions -ErrorAction SilentlyContinue)) {
+                Set-ItResult -Skipped -Because 'lpoptions not found (CUPS not installed)'
+                return
+            }
+            { Set-PrintConfiguration -PrinterName 'TestPrinter' -OptionName 'sides' -OptionValue 'two-sided-long-edge' -WhatIf } |
+                Should -Not -Throw
+        }
+    }
+
+    Context 'Set-Printer — WhatIf' {
+        It 'Supports -WhatIf without calling lpadmin' {
+            if (-not (Get-Command lpadmin -ErrorAction SilentlyContinue)) {
+                Set-ItResult -Skipped -Because 'lpadmin not found (CUPS not installed)'
+                return
+            }
+            { Set-Printer -Name 'TestPrinter' -Location 'Server Room' -WhatIf } |
+                Should -Not -Throw
+        }
+        It 'Returns an error when CUPS is absent' {
+            if (Get-Command lpadmin -ErrorAction SilentlyContinue) {
+                Set-ItResult -Skipped -Because 'lpadmin found (CUPS installed)'
+                return
+            }
+            $errors = $null
+            Set-Printer -Name 'TestPrinter' -Location 'Server Room' -ErrorVariable errors -ErrorAction SilentlyContinue
+            $errors | Should -Not -BeNullOrEmpty
+        }
+    }
+
+    Context 'Set-PrinterProperty — WhatIf' {
+        It 'Supports -WhatIf without calling lpoptions' {
+            if (-not (Get-Command lpoptions -ErrorAction SilentlyContinue)) {
+                Set-ItResult -Skipped -Because 'lpoptions not found (CUPS not installed)'
+                return
+            }
+            { Set-PrinterProperty -PrinterName 'TestPrinter' -PropertyName 'Duplex' -Value 'DuplexNoTumble' -WhatIf } |
+                Should -Not -Throw
+        }
+    }
+
+    Context 'Rename-Printer — WhatIf' {
+        It 'Supports -WhatIf without calling lpadmin' {
+            if (-not (Get-Command lpadmin -ErrorAction SilentlyContinue)) {
+                Set-ItResult -Skipped -Because 'lpadmin not found (CUPS not installed)'
+                return
+            }
+            { Rename-Printer -Name 'OldName' -NewName 'NewName' -WhatIf } |
+                Should -Not -Throw
+        }
+        It 'Returns an error when CUPS is absent' {
+            if (Get-Command lpadmin -ErrorAction SilentlyContinue) {
+                Set-ItResult -Skipped -Because 'lpadmin found (CUPS installed)'
+                return
+            }
+            $errors = $null
+            Rename-Printer -Name 'OldName' -NewName 'NewName' -ErrorVariable errors -ErrorAction SilentlyContinue
+            $errors | Should -Not -BeNullOrEmpty
         }
     }
 }

@@ -1,16 +1,42 @@
 function Set-PrinterProperty {
     <#
     .Synopsis
-        Sets the printer properties for the specified printer.
+        Sets a PPD option value for a printer via lpoptions.
     .Description
-        NOT SUPPORTED on Linux. Set-PrinterProperty requires Windows-specific CIM printer properties not present in CUPS.
-        This cmdlet is a stub that emits a warning and returns nothing.
-        On Windows, use the built-in PrintManagement module: Import-Module PrintManagement
+        On Linux, wraps 'lpoptions -p <PrinterName> -o <PropertyName>=<Value>' to set a
+        per-printer PPD option. Requires CUPS.
+    .Parameter PrinterName
+        The name of the printer.
+    .Parameter PropertyName
+        The PPD option keyword to set (e.g. 'Duplex', 'MediaType').
+    .Parameter Value
+        The value to set for the option.
     .Link
         https://learn.microsoft.com/powershell/module/printmanagement/set-printerproperty
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([void])]
-    param()
-    Write-Warning 'Set-PrinterProperty is not supported on Linux. This cmdlet requires Windows-specific CIM printer properties not present in CUPS. Use the built-in PrintManagement module on Windows.'
+    param(
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
+        [string]$PrinterName,
+
+        [Parameter(Mandatory = $true, Position = 1)]
+        [string]$PropertyName,
+
+        [Parameter(Mandatory = $true, Position = 2)]
+        [string]$Value
+    )
+    process {
+        if (-not (Get-Command lpoptions -ErrorAction SilentlyContinue)) {
+            Write-Error 'Set-PrinterProperty: lpoptions not found. Install CUPS (sudo apt install cups).'
+            return
+        }
+        $optionArg = "${PropertyName}=${Value}"
+        if ($PSCmdlet.ShouldProcess($PrinterName, "Set printer property $optionArg")) {
+            $result = & lpoptions -p $PrinterName -o $optionArg 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "Set-PrinterProperty: lpoptions failed: $result"
+            }
+        }
+    }
 }

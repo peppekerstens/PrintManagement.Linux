@@ -1,16 +1,51 @@
 function Set-Printer {
     <#
     .Synopsis
-        Updates the configuration of an existing printer.
+        Updates printer attributes via lpadmin.
     .Description
-        NOT SUPPORTED on Linux. Set-Printer requires complex printer reconfiguration; use `lpadmin` directly on Linux.
-        This cmdlet is a stub that emits a warning and returns nothing.
-        On Windows, use the built-in PrintManagement module: Import-Module PrintManagement
+        On Linux, wraps 'lpadmin -p <PrinterName>' to modify printer attributes such as
+        location, info (description), and device URI. Requires CUPS.
+    .Parameter Name
+        The name of the printer to update. Required.
+    .Parameter Location
+        Human-readable printer location string (lpadmin -L).
+    .Parameter Comment
+        Human-readable printer description (lpadmin -D).
+    .Parameter DeviceUri
+        New device URI for the printer (lpadmin -v), e.g. 'socket://10.0.0.1:9100'.
     .Link
         https://learn.microsoft.com/powershell/module/printmanagement/set-printer
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([void])]
-    param()
-    Write-Warning 'Set-Printer is not supported on Linux. This cmdlet requires complex printer reconfiguration; use `lpadmin` directly on Linux. Use the built-in PrintManagement module on Windows.'
+    param(
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
+        [string]$Name,
+
+        [Parameter()]
+        [string]$Location,
+
+        [Parameter()]
+        [string]$Comment,
+
+        [Parameter()]
+        [string]$DeviceUri
+    )
+    process {
+        if (-not (Get-Command lpadmin -ErrorAction SilentlyContinue)) {
+            Write-Error 'Set-Printer: lpadmin not found. Install CUPS (sudo apt install cups).'
+            return
+        }
+        $lpadminArgs = @('-p', $Name)
+        if ($Location)  { $lpadminArgs += '-L', $Location }
+        if ($Comment)   { $lpadminArgs += '-D', $Comment }
+        if ($DeviceUri) { $lpadminArgs += '-v', $DeviceUri }
+
+        if ($PSCmdlet.ShouldProcess($Name, 'Update printer attributes')) {
+            $result = & lpadmin @lpadminArgs 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "Set-Printer: lpadmin failed: $result"
+            }
+        }
+    }
 }

@@ -1,16 +1,41 @@
 function Get-PrintConfiguration {
     <#
     .Synopsis
-        Gets the configuration information of a printer.
+        Gets the configuration options of a printer via lpoptions.
     .Description
-        NOT SUPPORTED on Linux. Get-PrintConfiguration requires Windows-specific GDI print configuration (paper size, orientation via WMI/CIM).
-        This cmdlet is a stub that emits a warning and returns nothing.
-        On Windows, use the built-in PrintManagement module: Import-Module PrintManagement
+        On Linux, wraps 'lpoptions -p <PrinterName>' to return per-printer default options.
+        Requires CUPS (lpstat/lpoptions). If CUPS is not installed, a warning is emitted.
+    .Parameter PrinterName
+        The name of the printer. Required.
     .Link
         https://learn.microsoft.com/powershell/module/printmanagement/get-printconfiguration
     #>
     [CmdletBinding()]
-    [OutputType([void])]
-    param()
-    Write-Warning 'Get-PrintConfiguration is not supported on Linux. This cmdlet requires Windows-specific GDI print configuration (paper size, orientation via WMI/CIM). Use the built-in PrintManagement module on Windows.'
+    [OutputType([PSCustomObject])]
+    param(
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipelineByPropertyName = $true)]
+        [string]$PrinterName
+    )
+    process {
+        if (-not (Get-Command lpoptions -ErrorAction SilentlyContinue)) {
+            Write-Error 'Get-PrintConfiguration: lpoptions not found. Install CUPS (sudo apt install cups).'
+            return
+        }
+        $raw = & lpoptions -p $PrinterName 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Get-PrintConfiguration: lpoptions failed for printer '$PrinterName': $raw"
+            return
+        }
+        # lpoptions output: space-separated key=value pairs on one line
+        $options = @{}
+        foreach ($token in ($raw -split '\s+')) {
+            if ($token -match '^([^=]+)=(.*)$') {
+                $options[$Matches[1]] = $Matches[2]
+            }
+        }
+        [PSCustomObject]@{
+            PrinterName = $PrinterName
+            Options     = $options
+        }
+    }
 }
