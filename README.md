@@ -1,5 +1,7 @@
 # PrintManagement.Linux
 
+[![Pester Tests](https://github.com/peppekerstens/PrintManagement.Linux/actions/workflows/pester.yml/badge.svg)](https://github.com/peppekerstens/PrintManagement.Linux/actions/workflows/pester.yml)
+
 Linux parity module for the Windows **PrintManagement** PowerShell module.
 
 Implements print management cmdlets on Linux using **CUPS** (`lpstat`, `lpadmin`, `cancel`) — no Windows driver infrastructure required.
@@ -207,7 +209,29 @@ The key research question was which of the 22 Windows cmdlets could map onto CUP
 
 ---
 
-## Version History
+## CI / Testing
+
+Tested across 5 Linux distributions in containers:
+
+| Distro | Image |
+|---|---|
+| Ubuntu 24.04 | `ghcr.io/peppekerstens/testinfra:ubuntu-24.04` |
+| Debian 12 | `ghcr.io/peppekerstens/testinfra:debian-12` |
+| Fedora 40 | `ghcr.io/peppekerstens/testinfra:fedora-40` |
+| openSUSE Tumbleweed | `ghcr.io/peppekerstens/testinfra:opensuse-tumbleweed` |
+| Arch Linux | `ghcr.io/peppekerstens/testinfra:arch-latest` |
+
+Run locally with:
+
+```powershell
+# From the repo root
+docker compose -f docker-compose.test.yml up --abort-on-container-exit
+```
+
+GitHub Actions runs the same matrix on every push — see `.github/workflows/pester.yml`.
+---
+
+## Version history
 
 | Version | Date | Notes |
 |---|---|---|
